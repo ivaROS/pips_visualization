@@ -1,0 +1,29 @@
+robot ground truth pose:
+subscribe to /gazebo/link_states
+msg.name[i] = mobile_base::base_footprint
+pose = msg.pose[i]
+
+or:
+rosservice call /gazebo/get_link_state "link_name: 'base_footprint'
+reference_frame: ''" 
+pose = response.pose
+
+
+camera ground truth pose:
+subscribe to ~/user_camera/pose
+Problem: that is a private topic...
+
+
+Spawning in my camera:
+rosrun gazebo_ros spawn_model -file `rospack find pips_visualization`/data/camera_model.sdf -sdf -model camera6 -x 6 -y -3.54 -z .5
+
+should also be able to use the srdf service; look at spawn_model script.
+
+moving camera:
+rosservice call /gazebo/set_link_state "link_state:
+  link_name: 'camera6::camera_link'
+  pose:...
+   reference_frame: 'mobile_base::base_footprint'" 
+   
+   
+Plan: get viewpoint wrt robot base in rviz and set the rviz_camera to have the same pose,

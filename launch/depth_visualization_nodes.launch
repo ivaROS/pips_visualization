@@ -1,0 +1,77 @@
+<launch>
+
+  <group ns="visualization">
+<!--
+    <node name="pose_generator" pkg="pips_visualization" type="pose_generator.py">
+    </node>
+-->
+<!-- xterm -e gdb -ex run - -args-->
+
+
+    <node name="poses_to_markers" pkg="pips_visualization" type="pose_marker_publisher">
+      <remap from="poses" to="poses"/>
+      <param name="cc_params_ns" value="depth_image_cc/depth_image_cc_wrapper/depth_image_collision_checker"/>
+      <remap from="markers" to="pose_markers"/>
+    </node>
+
+    <node name="depth_im_gen" pkg="pips_visualization" type="hallucinated_image_publisher.py">
+      <param name="service_name"  value="depth_image_cc/depth_image_cc_wrapper/depth_image_collision_checker/generate_depth_image"/>
+      <remap from="generated_image" to="hallucinated_depth_im"/>
+      <remap from="image_in" to="/camera/depth/image_raw"/>
+    </node>
+
+
+    <node name="depth_collision_points" pkg="pips_visualization" type="collision_point_publisher.py">
+      <param name="service_name"  value="depth_image_cc/depth_image_cc_wrapper/CollisionChecker/test_collision"/>
+      <remap from="collision_points" to="depth_image_cc/depth_image_cc_wrapper/depth_image_collision_checker/collisions"/>
+      <remap from="combined_collision_points" to="combined_depth_collision_points"/>
+    </node>
+
+
+    <node name="img_overlayer" pkg="pips_visualization" type="image_overlayer.py">
+      <remap from="generated_image" to="combined_image"/>
+      <remap from="filler_image" to="/camera/depth/image_raw"/>
+      <remap from="main_image" to="hallucinated_depth_im"/>
+    </node>
+    
+    <include file="$(find pips_visualization)/launch/depth_to_points.launch">
+      <arg name="image_in"          value="hallucinated_depth_im"/>
+      <arg name="info_in"           value="/camera/depth/camera_info"/>
+      <arg name="points"            value="depth_points"/>
+    </include>
+
+    <node name="depth_to_borders" pkg="pips_visualization" type="swept_volume_publisher.py">
+      <remap from="camera_info" to="camera_info"/>
+      <remap from="image_in" to="hallucinated_depth_im"/>
+      <remap from="swept_volume" to="swept_volume"/>
+    </node>
+    
+    <node name="points_to_surface" pkg="pips_visualization" type="point_cloud_to_mesh">
+      <remap from="points" to="depth_points"/>
+      <remap from="mesh" to="swept_volume"/>
+    </node>
+    
+    <node name="depth_image_cc" pkg="pips_trajectory_testing" type="depth_image_cc_node" launch-prefix="">
+      <param name="depth_image_cc_wrapper/depth_image_topic" value="/camera/depth/image_raw"/>
+      <param name="depth_image_cc_wrapper/depth_info_topic" value="/camera/depth/camera_info"/>
+      <param name="odom_frame_id" value="odom"/>
+      <param name="base_frame_id" value="base_footprint"/>
+    <!--  <param name="depth_image_cc_wrapper/depth_image_collision_checker/model_type" value="6"/> -->
+      <param name="depth_image_cc_wrapper/depth_image_collision_checker/show_im" value="True"/>
+    </node>
+    
+    <node name="depth_info_relay" pkg="topic_tools" type="relay" args="/camera/depth/camera_info camera_info"/>
+
+    <node name="depth_pcl_filter_nodelet" pkg="nodelet" type="nodelet" args="standalone pcl/PassThrough">
+        <remap from="depth_pcl_filter_nodelet/input" to="/camera/depth/points"/>
+        <remap from="depth_pcl_filter_nodelet/output" to="filtered_cloud"/>
+        <param name="filter_field_name" value="y"/>
+        <param name="filter_limit_min"  value="-10"/>
+        <param name="filter_limit_max"  value=".28"/>
+    </node>
+
+    
+  </group>
+  
+
+</launch>

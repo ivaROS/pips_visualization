@@ -1,0 +1,105 @@
+<launch>
+
+  <arg name="nodelet_manager" value="/egocylinder/egocylindrical_nodelet_manager"/>
+  
+  <!-- <include file="$(find egocylindrical)/launch/nodelets.launch"/> -->
+
+  <group ns="visualization">
+
+    <node name="pose_generator" pkg="pips_visualization" type="pose_generator.py">
+    </node>
+
+    <node name="ec_im_gen" pkg="pips_visualization" type="hallucinated_image_publisher.py">
+      <param name="service_name"  value="egocylindrical_image_cc/egocylindrical_image_cc_wrapper/egocylindrical_image_collision_checker/generate_depth_image"/>
+      <remap from="image_in" to="/egocylinder/image"/>
+      <remap from="generated_image" to="hallucinated_ec_im"/>
+    </node>
+    
+    <node name="ec_collision_points" pkg="pips_visualization" type="collision_point_publisher.py">
+      <param name="service_name"  value="egocylindrical_image_cc/egocylindrical_image_cc_wrapper/CollisionChecker/test_collision"/>
+      <remap from="collision_points" to="egocylindrical_image_cc/egocylindrical_image_cc_wrapper/egocylindrical_image_collision_checker/collisions"/>
+      <remap from="combined_collision_points" to="combined_ec_collision_points"/>
+    </node>
+    
+    <node name="img_overlayer" pkg="pips_visualization" type="image_overlayer.py">
+      <remap from="generated_image" to="combined_ec_image"/>
+      <remap from="filler_image" to="/egocylinder/image"/>
+      <remap from="main_image" to="hallucinated_ec_im"/>
+    </node>
+    
+    <node name="egocylindrical_image_cc" pkg="pips_egocylindrical" type="egocylindrical_image_cc_node">
+      <param name="egocylindrical_image_cc_wrapper/egocylindrical_image_topic" value="/egocylinder/image"/>
+      <param name="egocylindrical_image_cc_wrapper/egocylindrical_info_topic" value="/egocylinder/data"/>
+      <param name="odom_frame_id" value="odom"/>
+      <param name="base_frame_id" value="base_footprint"/>
+      <param name="egocylindrical_image_cc_wrapper/egocylindrical_image_collision_checker/model_type" value="6"/>
+      <param name="egocylindrical_image_cc_wrapper/egocylindrical_image_collision_checker/show_im" value="True"/>
+    </node>
+    
+    <node name="range_img_to_ec" pkg="egocylindrical" type="range_image_converter_node">
+      <remap from="data_out" to="converted_im_data"/>
+      <remap from="image_in" to="hallucinated_ec_im"/>
+      <remap from="info_in" to="/egocylinder/data"/>
+    </node>
+    
+    <node name="gen_ec_to_pointcloud_nodelet" pkg="nodelet" type="nodelet" args="standalone egocylindrical/point_cloud_nodelet" >
+      <remap from="egocylindrical_points" to="converted_im_data"/>
+      <remap from="cylindrical" to="ec_points"/>
+    </node>
+    
+    <node name="range_img_outline_to_mesh" pkg="pips_visualization" type="ec_swept_volume.py">
+      <remap from="swept_volume" to="ec_swept_volume"/>
+      <remap from="image_in" to="hallucinated_ec_im"/>
+      <remap from="info_in" to="/egocylinder/data"/>
+    </node>
+    
+    
+    <node name="points_to_surface" pkg="pips_visualization" type="point_cloud_to_mesh">
+      <remap from="points" to="ec_points"/>
+      <remap from="mesh" to="ec_swept_volume"/>
+    </node>
+    
+    <node name="ec_pcl_filter_nodelet" pkg="nodelet" type="nodelet" args="standalone pcl/PassThrough">
+      <remap from="ec_pcl_filter_nodelet/input" to="/egocylinder/points"/>
+      <remap from="ec_pcl_filter_nodelet/output" to="filtered_ec_cloud"/>
+      <param name="filter_field_name" value="y"/>
+      <param name="filter_limit_min"  value="-10"/>
+      <param name="filter_limit_max"  value=".28"/>
+    </node>
+    
+    <node name="poses_to_markers" pkg="pips_visualization" type="pose_marker_publisher">
+      <remap from="poses" to="poses"/>
+      <param name="cc_params_ns" value="egocylindrical_image_cc/egocylindrical_image_cc_wrapper/egocylindrical_image_collision_checker"/>
+      <remap from="markers" to="pose_markers"/>
+    </node>
+    
+    
+    <!--
+    <node name="img_to_outline" pkg="pips_visualization" type="image_outline_publisher.py">
+      <remap from="image_in" to="hallucinated_ec_im"/>
+      <remap from="image_out" to="hallucinated_ec_outline"/>
+    </node>
+
+    <node name="range_img_outline_to_ec" pkg="egocylindrical" type="range_image_converter_node">
+      <remap from="data_out" to="outline_data"/>
+      <remap from="image_in" to="hallucinated_ec_outline"/>
+      <remap from="info_in" to="/egocylinder/egocylindrical_points"/>
+    </node>
+
+    <node name="gen_ec_outline_to_pointcloud_nodelet" pkg="nodelet" type="nodelet" args="standalone egocylindrical/point_cloud_nodelet" >
+      <remap from="egocylindrical_points" to="outline_data"/>
+      <remap from="cylindrical" to="outline_points"/>
+    </node>
+    
+    <node name="outline_points_to_marker" pkg="pips_visualization" type="outline_to_mesh.py">
+      <remap from="points" to="outline_points"/>
+      <remap from="swept_volume" to="swept_volume"/>
+    </node>
+    
+    -->
+    
+    
+  </group>
+  
+
+</launch>

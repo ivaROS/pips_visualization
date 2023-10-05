@@ -1,0 +1,26 @@
+<launch>
+
+  
+  <include file="$(find egocylindrical)/launch/nodelets.launch"/>
+
+  <group>
+
+    <node name="pose_generator" pkg="pips_visualization" type="pose_generator.py">
+    </node>
+    
+    <node name="transform_tester" pkg="pips_visualization" type="transform_tester.py" output="screen">
+      <remap from="poses" to="poses"/>
+      <remap from="depth_im" to="depth_im_throttled/image"/>
+      <remap from="ec_im" to="ec_im_throttled"/>
+    </node>
+    
+    
+    <node name="ec_image_throttle" pkg="topic_tools" type="throttle" args="messages /egocylinder/image 1 ec_im_throttled"/>
+    <node name="depth_image_throttle" pkg="topic_tools" type="throttle" args="messages /camera/depth/image_raw 2 depth_im_throttled/image"/>
+    <node name="depth_info_relay" pkg="topic_tools" type="relay" args="/camera/depth/camera_info depth_im_throttled/camera_info"/>
+    
+  </group>
+  
+
+</launch>
+

@@ -1,0 +1,7 @@
+<launch>
+
+<node name="camera_spawner" pkg="gazebo_ros" type="spawn_model" args="-sdf -file $(find pips_visualization)/sdf/free_camera.sdf -model world_camera -z 10 -P 1.57"/>
+  
+  <node name="camera_tf_publisher" pkg="tf" type="static_transform_publisher" args="0 0 10 0 1.57 0 map world_camera_link_base 100"/>
+  <node name="camera_tf_publisher2" pkg="tf" type="static_transform_publisher" args="0 0 0 -.5 .5 -.5 .5 world_camera_link_base world_camera_link 100"/>
+</launch>

@@ -1,0 +1,30 @@
+<library path="lib/libpips_rviz">
+  <class name="pips_visualization/PathArray"
+         type="rviz::PathArrayDisplay"
+         base_class_type="rviz::Display">
+    <description>
+      Displays arrays of nav_msgs::Path.
+    </description>
+    <message_type>pips_msgs/PathArray</message_type>
+  </class>
+  <class name="pips_visualization/RobotModelArray"
+       type="rviz::RobotModelArrayDisplay"
+       base_class_type="rviz::Display">
+  <description>
+    Displays arrays of path messages.
+  </description>
+  <message_type>pips_msgs/PoseArray</message_type>
+  </class>
+  <!--In order to reduce redundancy, the CameraPubDisplay plugin required making parts of the CameraDisplay protected-->
+  <!--
+  <class name="pips_visualization/CameraPubDisplay"
+       type="rviz::CameraPubDisplay"
+       base_class_type="rviz::Display">
+  <description>
+    Displays arrays of robot models.
+  </description>
+  <message_type>sensor_msgs/Image</message_type>
+  </class>
+  -->
+</library>
+

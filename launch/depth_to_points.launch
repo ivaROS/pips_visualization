@@ -1,0 +1,20 @@
+<launch>
+  <arg name="image_in"          default="image"/>
+  <arg name="info_in"           default="info"/>
+  <arg name="points"            default="points"/>
+  
+  <arg name="camera_nodelet_manager" default="camera_nodelet_manager"/>
+  <arg name="manager" default="true"/>
+
+  <node name="camera_nodelet_manager" pkg="nodelet" type="nodelet" args="manager" if="$(arg manager)"/>  
+
+  <node name="hallucinated_point_cloud_publisher" pkg="nodelet" type="nodelet" args="load depth_image_proc/point_cloud_xyz $(arg camera_nodelet_manager) ">
+    <remap from="image_rect" to="$(arg image_in)"/>
+    <remap from="camera_info" to="$(arg info_in)"/>
+    <remap from="points" to="$(arg points)"/>
+  </node>
+
+
+
+
+</launch>
